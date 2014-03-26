@@ -139,7 +139,7 @@ def getNearShakingRunner(request):
         userName = user.userName
         phoneNum = user.phoneNum
         distance = 100
-        aRunner = {'userName':userName,'phoneNum':phoneNum,'distance':distance,'userLocation':user_loc}
+        aRunner = {'username':userName,'phoneNumber':phoneNum,'distance':distance,'userLocation':user_loc}
         print loc_key
         if mu.acquire():
             if user_id not in shakingUsers:
@@ -148,7 +148,7 @@ def getNearShakingRunner(request):
                     locationHash[loc_key] = []
                 locationHash[loc_key].append(aRunner)
             mu.release()
-        time.sleep(4)
+        time.sleep(3)
             
         if mu.acquire():
             userlist =  locationHash[loc_key]
@@ -161,7 +161,7 @@ def getNearShakingRunner(request):
             mu.release()
         tmpUsers = []
         for u in userlist:
-            if u['userName'] != userName:
+            if u['username'] != userName:
                 tmpUsers.append(u)
         userlist = tmpUsers
         #print 'post'

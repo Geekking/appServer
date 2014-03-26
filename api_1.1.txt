@@ -99,12 +99,14 @@ getNearShakingRunner:
 				[{
 					'userName':'testT',
 					'userLocation":(22.0,22.0),
-					'distance':100
+					'distance':100,
+					'phoneNumber':13560323563
 				},
 				{
 					'userName':'我是花无缺"
 					'userLocation':(22.0,22.8),
-					'distance':200
+					'distance':200,
+					'phoneNumber':13560323566
 				}
 				]
 		}

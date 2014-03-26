@@ -25,9 +25,9 @@ SECRET_KEY = '3bjzavbrd(e)3g0&4*nt^g5mh131cp*!^4^hpg28e+#ok)-r9%'
 print socket.gethostname()
 if socket.gethostname() == 'apple.local':
     #Development Server Settings go here
-    DEBUG = True
+    DEBUG = False
 
-    TEMPLATE_DEBUG = True
+    TEMPLATE_DEBUG = False
 
 else:
     #Production Server Settings go here
