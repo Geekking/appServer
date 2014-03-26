@@ -22,8 +22,8 @@ urlpatterns = patterns('',
     url(r'^registe$',registe),
     url(r'^logout',logout),
     
-    url(r'^diet/push/$',pushMyDiet),
-    url(r'^diet/get/$',getMyDiet),
+    url(r'^diet/push/?$',pushMyDiet),
+    url(r'^diet/get/?$',getMyDiet),
     
     url(r'^runner/getNearShakingRunner',getNearShakingRunner),
     

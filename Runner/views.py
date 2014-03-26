@@ -201,6 +201,9 @@ def pushMyDiet(request):
         return render_to_response('diet/pushMyDiet.html',{'title':'push my diet'})
         
     else:
-        print 'test'
+        print 'post'
+        print request.POST['ff']
+        jsonGen.loads(request.POST['ff'])
+        
     
     
