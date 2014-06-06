@@ -10,6 +10,8 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import books
+import socket
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -20,11 +22,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = '3bjzavbrd(e)3g0&4*nt^g5mh131cp*!^4^hpg28e+#ok)-r9%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-TEMPLATE_DEBUG = True
+if socket.gethostname() == 'apple.local':
+    #Development Server Settings go here
+    DEBUG = True
 
-ALLOWED_HOSTS = []
+    TEMPLATE_DEBUG = True
+
+else:
+    #Production Server Settings go here
+    DEBUG = TEMPLATE_DEBUG = False
+
+ADMINS = (
+    ('Apple ', '791283555@qq.com'),
+)
+
+ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
@@ -36,12 +50,14 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'books',
+    'Runner',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -50,7 +66,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'sbServer.urls'
 
 WSGI_APPLICATION = 'sbServer.wsgi.application'
-
+TEMPLATE_DIRS = ('./Template/',)
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
@@ -67,7 +83,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
