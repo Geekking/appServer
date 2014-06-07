@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = '3bjzavbrd(e)3g0&4*nt^g5mh131cp*!^4^hpg28e+#ok)-r9%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-
+print socket.gethostname()
 if socket.gethostname() == 'apple.local':
     #Development Server Settings go here
     DEBUG = True

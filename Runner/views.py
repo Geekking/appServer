@@ -3,83 +3,36 @@ from django.shortcuts import render
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.http import Http404
-from django.utils import simplejson
+import json as jsonGen
 from models import Runner
 import threading
 import time
 from hashlib import md5
+
 # Create your views here.
 
-request_list = []
+locationHash = {}
+shakingUsers = set()
 mu = threading.Lock()
 
-class ServerThread(threading.Thread):
-    def get_Loc(self,loc_str):
-        loc_str = loc_str.strip()[1:-1]
-        (latitude,longtitude) = loc_str.split(',')
-        return (float(latitude),float(longtitude))
-    def get_key(self,loc_str):
-        lat,lt = self.get_Loc(loc_str)
-        
-        loc_key = '' 
-        return loc_key
-    def response(self,request,nearRunners):
-        nearRunnerList = []
-        if len(nearRunners) > 0:
-            #near user found
-            nearUserCount = 0
-            for runner_request in nearRunners:
-                aRunner = {}
-                user_id = runner_request.session['user_id']
-                try:
-                    user = Runner.objects.filter(id = user_id)
-                    aRunner['userName'] = user.userName
-                    aRunner['phoneNum'] = user.phoneNum
-                    aRunner['userlocation'] = runner_request.POST['myLocation']
-                    aRunner['distance'] = 100
-                    nearRunnerList.append(aRunner)
-                    nearUserCount += 1
-                    if nearUserCount > 10:
-                        break
-                except:
-                    continue
-            json = {
-                    'code':200,
-                    'phase':'near user found',
-                    'userlist':nearRunnerList}
-            
-        else:
-            #handle no near user
-            pass
-    def handleRequest(self,request_list):
-        locationHash = {}
-        for request in request_list:
-            loc_str = request.POST['myLocation']
-            loc_key = self.get_key(loc_str)
-            if loc_key not in locationHash.keys():
-                locationHash[loc_key] = []
-            locationHash[loc_key].append(request)
-        for request in request_list:
-            loc_str = request.POST['myLocation']
-            loc_key = self.get_key(loc_str)
-            self.response(request, locationHash[loc_key])
-            
-    def run(self):
-        global request_list
-        while(True):
-            time.sleep(60)
-            if mu.accquire():
-                self.handleRequest(request_list)
-                mu.release()
-
-#instanlized
-serverThread = ServerThread()
 
 def checkLogin(request):
     if 'user_id' in request.session.keys():
         return True
     return False
 
+class ServerThread(threading.Thread):
+    def run(self):
+        while True:
+            time.sleep(1)
+            curTime = int(time.time())
+            if curTime % 10 == 0:
+                if mu.acquire():
+                    locationHash = {}
+                    mu.release()
+#since django not support multi thread in this way WRONG
+# serverThread = ServerThread()
+# serverThread.run()
 def login(request):
     if request.method != 'POST':
         return render_to_response('account/login.html',{'title':'login'})    
@@ -93,18 +46,18 @@ def login(request):
             if pwd != user.password:
                 json = {'code':152,
                     'phase':'password not match'}
-                return HttpResponse(simplejson.dumps(json,ensure_ascii = False))
+                return HttpResponse(jsonGen.dumps(json,ensure_ascii = False))
             else:
                 json = {'code':150,
                         'phase':'login success'
                         }
                 request.session['user_id'] = user.id
-                return HttpResponse(simplejson.dumps(json,ensure_ascii = False))
+                return HttpResponse(jsonGen.dumps(json,ensure_ascii = False))
     
         except Runner.DoesNotExist:
             json = {'code':151,
                     'phase':'user not exists!'}
-            return HttpResponse(simplejson.dumps(json,ensure_ascii = False))
+            return HttpResponse(jsonGen.dumps(json,ensure_ascii = False))
             
         
             
@@ -116,7 +69,7 @@ def registe(request):
         if checkLogin(request):
             json = {'code':102,
                     'phase':'user already loggin, please logout'}
-            return HttpResponse(simplejson.dumps(json, ensure_ascii = False))
+            return HttpResponse(jsonGen.dumps(json, ensure_ascii = False))
         else:
             userName = request.POST['userName']
             password = request.POST['password']
@@ -130,14 +83,14 @@ def registe(request):
                 json = {'code':101,
                         'phase':'user already exist'
                         }
-                return HttpResponse(simplejson.dumps(json,ensure_ascii = False ))
+                return HttpResponse(jsonGen.dumps(json,ensure_ascii = False ))
         
             except Runner.DoesNotExist:
                 user = Runner(userName = userName,password = password,phoneNum = phoneNum,weight = weight,height = height)
                 user.save()
                 json = {'code':100,
                         'phase':'registe success'}
-                return HttpResponse(simplejson.dumps(json,ensure_ascii = False))
+                return HttpResponse(jsonGen.dumps(json,ensure_ascii = False))
                 
             
 def logout(request):
@@ -152,28 +105,69 @@ def logout(request):
                 pass
             json = {'code':180,
                     'phase':'logout success'}
-            return HttpResponse(simplejson.dumps(json,ensure_ascii = False))
+            return HttpResponse(jsonGen.dumps(json,ensure_ascii = False))
         else:
             json = {'code':180,
                     'phase':' you did not login'}
-            return HttpResponse(simplejson.dumps(json,ensure_ascii = False))
+            return HttpResponse(jsonGen.dumps(json,ensure_ascii = False))
             
          
 def resetPassword(request):
     pass
+tmp = 0
 
+
+def get_Key(loc_str):
+    alt,lt = loc_str.strip()[1:-1].split(',')
+    loc_key = alt.split('.')[0] + lt.split('.')[0]
+    return loc_key
+    
 def getNearShakingRunner(request):
+    global tmp,locationHash,shakingUsers
     if checkLogin(request) == False:
         #raise Http404('Please login')
         return render_to_response('account/login.html',{'title':'login'})
+    
     if request.method == 'GET':
         return render_to_response('nearShakingRunner.html',{'title':'get near shaking runners'})
+    
     if request.method == 'POST':
-        if mu.accquire():
-            request_list.append(request)
+        user_loc = request.POST['myLocation']
+        loc_key = get_Key(user_loc)
+        user_id = request.session['user_id']
+        user = Runner.objects.get(id = user_id)
+        userName = user.userName
+        phoneNum = user.phoneNum
+        distance = 100
+        aRunner = {'userName':userName,'phoneNum':phoneNum,'distance':distance,'userLocation':user_loc}
+        print loc_key
+        if mu.acquire():
+            if user_id not in shakingUsers:
+                shakingUsers.add(user_id)
+                if loc_key not in locationHash.keys():
+                    locationHash[loc_key] = []
+                locationHash[loc_key].append(aRunner)
             mu.release()
+        time.sleep(4)
+            
+        if mu.acquire():
+            userlist =  locationHash[loc_key]
+            try:
+                shakingUsers.remove(user_id)
+                if len(shakingUsers) == 0:
+                    locationHash = {}
+            except:
+                print 'shaking user error'
+            mu.release()
+        tmpUsers = []
+        for u in userlist:
+            if u['userName'] != userName:
+                tmpUsers.append(u)
+        userlist = tmpUsers
         #print 'post'
-#         userlist = [{
+        
+         
+#                      [{
 #                      'userName':'testT',
 #                     'userLocation':'(127,110)',
 #                     'distance':100
@@ -183,16 +177,30 @@ def getNearShakingRunner(request):
 #                     'userLocation':'(127,110)',
 #                     'distance':100
 #                      }]
-#         json = {
-#             'code': 200,
-#             'phase':'near user found',
-#             'userlist':userlist}
-#         
-#         return HttpResponse(simplejson.dumps(json,ensure_ascii=False))
+        if len(userlist) > 0:
+            json = {
+                'code': 200,
+                'phase':'near user found',
+                'userlist':userlist[0:5]}
+        else:
+            json = {
+                'code': 201,
+                'phase':'near user not found'} 
+        return HttpResponse(jsonGen.dumps(json,ensure_ascii=False))
         
 
 def getMyDiet(request):
     pass
 
 def pushMyDiet(request):
-    pass
+    if checkLogin(request) == False:
+        #raise Http404('Please login')
+        return render_to_response('account/login.html',{'title':'login'})
+    
+    if request.method == 'GET':
+        return render_to_response('diet/pushMyDiet.html',{'title':'push my diet'})
+        
+    else:
+        print 'test'
+    
+    

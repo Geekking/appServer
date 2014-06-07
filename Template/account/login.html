@@ -1,14 +1,11 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<html>
-<head>
-	<title>{{title}}</title>
-</head>
-<body>
-<form action="/login" method="post">
-	<p>用户名：<input type="text" name="userName"></p>
-	<p>密码：<input type="password" name="password"></p>
-	<p><input type="submit"  value="Submit"></p>
-</form>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title%} {{ title }}{% endblock%}
+
+{% block content%}
+	<form action = '/login' method = 'POST' align = 'center'>
+		<p>userName:<input type = 'text' name = 'userName' value = 'test123'/></p>
+		<p>password:<input type = 'password' name = 'password' value = 'test'/></p>
+		<p><input type = 'submit'  value = 'log in'/></p>
+	</form>
+{% endblock%}
