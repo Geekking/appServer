@@ -25,6 +25,6 @@ urlpatterns = patterns('',
     url(r'^diet/push/$',pushMyDiet),
     url(r'^diet/get/$',getMyDiet),
     
-    url(r'^runner/getNearShakingRunner/$',getNearShakingRunner),
+    url(r'^runner/getNearShakingRunner',getNearShakingRunner),
     
 )
